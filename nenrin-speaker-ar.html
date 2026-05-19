@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#ffffff" />
+  <title>年輪スピーカー — ARで見る</title>
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --white: #ffffff; --ink: #1a1a1a;
+      --ring1: #c8a97e; --ring2: #8b6340;
+      --btn-bg: #1a1a1a; --btn-fg: #ffffff;
+      --radius: 999px; --safe-b: env(safe-area-inset-bottom, 0px);
+    }
+    html, body { height: 100%; background: var(--white); color: var(--ink); font-family: 'Hiragino Mincho ProN', 'Yu Mincho', Georgia, serif; -webkit-font-smoothing: antialiased; overflow: hidden; }
+    .bg-nenrin { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+    .page { display: flex; flex-direction: column; align-items: center; height: 100dvh; position: relative; }
+    .header { width: 100%; padding: 20px 24px 0; display: flex; flex-direction: column; align-items: center; gap: 4px; z-index: 10; }
+    .header__label { font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--ring1); font-family: 'Courier New', monospace; }
+    .header__title { font-size: 22px; font-weight: 400; letter-spacing: 0.06em; color: var(--ink); }
+    model-viewer { width: 100%; flex: 1; min-height: 0; background: transparent; --poster-color: transparent; z-index: 1; position: relative; }
+    model-viewer::part(default-ar-button) { display: none; }
+    .footer { width: 100%; padding: 16px 32px calc(20px + var(--safe-b)); display: flex; flex-direction: column; align-items: center; gap: 14px; z-index: 10; background: var(--white); }
+    .btn-ar { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; max-width: 320px; padding: 17px 28px; background: var(--btn-bg); color: var(--btn-fg); border: none; border-radius: var(--radius); font-family: 'Hiragino Mincho ProN', Georgia, serif; font-size: 16px; letter-spacing: 0.08em; cursor: pointer; position: relative; overflow: hidden; -webkit-tap-highlight-color: transparent; transition: transform 0.15s ease, box-shadow 0.15s ease; box-shadow: 0 4px 20px rgba(26,26,26,0.18); }
+    .btn-ar:active { transform: scale(0.97); }
+    .btn-ar::before { content: ''; position: absolute; top: 0; left: -100%; width: 60%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent); animation: shimmer 3s ease infinite; }
+    @keyframes shimmer { 0% { left: -100%; } 60% { left: 160%; } 100% { left: 160%; } }
+    .btn-ar__icon { width: 22px; height: 22px; flex-shrink: 0; }
+    .hint { font-size: 11px; color: rgba(26,26,26,0.4); letter-spacing: 0.04em; text-align: center; font-family: 'Hiragino Kaku Gothic ProN', sans-serif; }
+    .no-ar-notice { display: none; font-size: 12px; color: rgba(26,26,26,0.45); text-align: center; font-family: 'Hiragino Kaku Gothic ProN', sans-serif; padding: 0 24px; }
+    .loader { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; background: var(--white); z-index: 20; transition: opacity 0.5s ease; }
+    .loader.hidden { opacity: 0; pointer-events: none; }
+    .loader__rings { width: 56px; height: 56px; position: relative; }
+    .loader__rings span { position: absolute; inset: 0; border-radius: 50%; border: 2px solid transparent; border-top-color: var(--ring1); animation: spin 1.2s linear infinite; }
+    .loader__rings span:nth-child(2) { inset: 8px; border-top-color: var(--ring2); animation-duration: 0.9s; animation-direction: reverse; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader__text { font-size: 12px; letter-spacing: 0.2em; color: rgba(26,26,26,0.4); font-family: 'Courier New', monospace; }
+  </style>
+</head>
+<body>
+
+<!-- 年輪背景：控えめに中央のみ -->
+<svg class="bg-nenrin" viewBox="0 0 390 844" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="wg" cx="50%" cy="52%" r="45%">
+      <stop offset="0%" stop-color="#e8d5b8" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="195" cy="440" rx="300" ry="300" fill="url(#wg)"/>
+  <!-- 年輪：薄く少なめ -->
+  <ellipse cx="195" cy="440" rx="40"  ry="37"  fill="none" stroke="#c8a97e" stroke-width="0.8" opacity="0.18"/>
+  <ellipse cx="195" cy="440" rx="72"  ry="67"  fill="none" stroke="#c8a97e" stroke-width="0.7" opacity="0.15"/>
+  <ellipse cx="195" cy="440" rx="108" ry="100" fill="none" stroke="#c8a97e" stroke-width="0.8" opacity="0.14"/>
+  <ellipse cx="195" cy="440" rx="148" ry="137" fill="none" stroke="#c8a97e" stroke-width="0.7" opacity="0.12"/>
+  <ellipse cx="195" cy="440" rx="192" ry="178" fill="none" stroke="#c8a97e" stroke-width="0.8" opacity="0.1"/>
+  <ellipse cx="195" cy="440" rx="240" ry="222" fill="none" stroke="#c8a97e" stroke-width="0.6" opacity="0.08"/>
+  <ellipse cx="195" cy="440" rx="292" ry="270" fill="none" stroke="#c8a97e" stroke-width="0.6" opacity="0.06"/>
+</svg>
+
+<div class="page">
+  <div class="loader" id="loader">
+    <div class="loader__rings"><span></span><span></span></div>
+    <div class="loader__text">LOADING...</div>
+  </div>
+  <div class="header">
+    <span class="header__label">3D &amp; AR Viewer</span>
+    <h1 class="header__title">年輪スピーカー</h1>
+  </div>
+  <model-viewer id="mv" src="nenrin-speaker-new.glb" alt="年輪スピーカー 3Dモデル"
+    ar ar-modes="webxr scene-viewer quick-look" ar-scale="auto"
+    camera-controls touch-action="none"
+    auto-rotate auto-rotate-delay="1500" rotation-per-second="12deg"
+    shadow-intensity="1.2" shadow-softness="0.8" exposure="1.1"
+    environment-image="neutral" reveal="auto"
+    style="touch-action: none;">
+  </model-viewer>
+  <div class="footer">
+    <button class="btn-ar" id="arBtn" aria-label="ARで部屋に置いて見る">
+      <svg class="btn-ar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 9V5a2 2 0 0 1 2-2h4"/><path d="M16 3h4a2 2 0 0 1 2 2v4"/>
+        <path d="M22 15v4a2 2 0 0 1-2 2h-4"/><path d="M8 21H4a2 2 0 0 1-2-2v-4"/>
+        <polyline points="12 8 12 16"/><polyline points="8 12 16 12"/>
+      </svg>
+      部屋に置いて見る
+    </button>
+    <p class="hint">ドラッグで回転 · ピンチでズーム</p>
+    <p class="no-ar-notice" id="noArNotice">お使いのブラウザはARに対応していません。<br>iPhone Safari / Android Chromeでお試しください。</p>
+  </div>
+</div>
+
+<script>
+  const mv = document.getElementById('mv');
+  const arBtn = document.getElementById('arBtn');
+  const loader = document.getElementById('loader');
+  const noAr = document.getElementById('noArNotice');
+  mv.addEventListener('load', () => loader.classList.add('hidden'));
+  setTimeout(() => loader.classList.add('hidden'), 6000);
+  arBtn.addEventListener('click', () => {
+    if (mv.canActivateAR) { mv.activateAR(); }
+    else { noAr.style.display = 'block'; arBtn.style.opacity = '0.45'; arBtn.style.pointerEvents = 'none'; }
+  });
+  mv.addEventListener('ar-status', (e) => { if (e.detail.status === 'failed') noAr.style.display = 'block'; });
+</script>
+</body>
+</html>
